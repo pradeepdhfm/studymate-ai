@@ -1,0 +1,13 @@
+project_id = "ouyirnypxenhorxqqpik"
+
+[functions.process-pdf]
+verify_jwt = false
+
+[functions.generate-questions]
+verify_jwt = false
+
+[functions.generate-answer]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
