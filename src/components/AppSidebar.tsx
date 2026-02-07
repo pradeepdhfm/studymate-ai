@@ -4,12 +4,13 @@ import {
   HelpCircle,
   MessageCircle,
   History,
+  FileSearch,
   ChevronLeft,
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
 
-export type AppView = 'dashboard' | 'questions' | 'chat' | 'saved-chats';
+export type AppView = 'dashboard' | 'summarizer' | 'questions' | 'chat' | 'saved-chats';
 
 interface AppSidebarProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface AppSidebarProps {
 
 const navItems: { id: AppView; label: string; icon: React.ElementType }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'summarizer', label: 'Summarizer', icon: FileSearch },
   { id: 'questions', label: 'Questions', icon: HelpCircle },
   { id: 'chat', label: 'Ask Doubt', icon: MessageCircle },
   { id: 'saved-chats', label: 'Saved Chats', icon: History },
