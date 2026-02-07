@@ -1,18 +1,14 @@
-import { useState } from 'react';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@/components/ui/resizable';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, RotateCcw, BookOpenCheck } from 'lucide-react';
-import { QuestionList } from './QuestionList';
-import { AnswerPanel } from './AnswerPanel';
-import { ChatPanel } from './ChatPanel';
+import { Sparkles, FileText, RotateCcw } from 'lucide-react';
 import { useStudyAssistant } from '@/hooks/useStudyAssistant';
+import { useChatHistory } from '@/hooks/useChatHistory';
 import { PdfUpload } from './PdfUpload';
-
-type LeftTab = 'questions' | 'chat';
+import { AppSidebar, type AppView } from './AppSidebar';
+import { Dashboard } from './Dashboard';
+import { QuestionsView } from './QuestionsView';
+import { ChatView } from './ChatView';
+import { SavedChats, type SavedChat } from './SavedChats';
 
 export function StudyLayout() {
   const {
@@ -33,12 +29,35 @@ export function StudyLayout() {
     resetDocument,
   } = useStudyAssistant();
 
-  const [leftTab, setLeftTab] = useState<LeftTab>('questions');
+  const { savedChats, saveChat, deleteChat } = useChatHistory();
+  const [currentView, setCurrentView] = useState<AppView>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Auto-save chat when leaving chat view with messages
+  const handleNavigate = useCallback(
+    (view: AppView) => {
+      // Save current chat if navigating away from chat with messages
+      if (currentView === 'chat' && chatMessages.length > 0 && view !== 'chat') {
+        saveChat(chatMessages, documentName);
+      }
+      setCurrentView(view);
+    },
+    [currentView, chatMessages, documentName, saveChat]
+  );
+
+  const handleOpenSavedChat = useCallback(
+    (chat: SavedChat) => {
+      // Navigate to chat view — the saved chat messages are displayed read-only
+      // For now we just switch to chat view
+      setCurrentView('chat');
+    },
+    []
+  );
 
   // Show upload screen if no document
   if (!documentId) {
     return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center">
+      <div className="min-h-screen gradient-bg-animated flex items-center justify-center">
         <PdfUpload
           onUpload={uploadPdf}
           isUploading={isUploading}
@@ -49,16 +68,24 @@ export function StudyLayout() {
   }
 
   return (
-    <div className="min-h-screen gradient-bg flex flex-col">
+    <div className="min-h-screen gradient-bg-animated flex flex-col min-w-[1024px]">
+      {/* Sidebar */}
+      <AppSidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen((p) => !p)}
+        currentView={currentView}
+        onNavigate={handleNavigate}
+      />
+
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="h-14 border-b border-border/50 flex items-center justify-between px-4 bg-card/30 backdrop-blur-md"
       >
-        <div className="flex items-center gap-3">
-          <BookOpenCheck className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground gradient-text">StudyRAG</span>
+        <div className="flex items-center gap-3 ml-12">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-foreground gradient-text">AI Analyzer</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -81,70 +108,42 @@ export function StudyLayout() {
         </div>
       </motion.header>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Left Panel - Questions & Chat */}
-          <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-            <div className="h-full flex flex-col glass-panel-solid m-2 mr-0 overflow-hidden">
-              {/* Left panel tabs */}
-              <div className="flex border-b border-border">
-                <button
-                  onClick={() => setLeftTab('questions')}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    leftTab === 'questions'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Questions ({questions.length})
-                </button>
-                <button
-                  onClick={() => setLeftTab('chat')}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    leftTab === 'chat'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Doubt Chat
-                </button>
-              </div>
+      {/* Main content area */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {currentView === 'dashboard' && (
+          <Dashboard
+            documentName={documentName}
+            questionsCount={questions.length}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-              {/* Left panel content */}
-              <div className="flex-1 overflow-y-auto scrollbar-thin">
-                {leftTab === 'questions' ? (
-                  <QuestionList
-                    questions={questions}
-                    isLoading={isGeneratingQuestions}
-                    selectedQuestionId={selectedQuestion?.id || null}
-                    onSelectQuestion={generateAnswer}
-                  />
-                ) : (
-                  <ChatPanel
-                    messages={chatMessages}
-                    isLoading={isChatLoading}
-                    onSendMessage={sendChatMessage}
-                    isDisabled={false}
-                  />
-                )}
-              </div>
-            </div>
-          </ResizablePanel>
+        {currentView === 'questions' && (
+          <QuestionsView
+            questions={questions}
+            isGeneratingQuestions={isGeneratingQuestions}
+            selectedQuestion={selectedQuestion}
+            answer={answer}
+            isGeneratingAnswer={isGeneratingAnswer}
+            onSelectQuestion={generateAnswer}
+          />
+        )}
 
-          <ResizableHandle withHandle className="bg-transparent hover:bg-primary/20 transition-colors" />
+        {currentView === 'chat' && (
+          <ChatView
+            messages={chatMessages}
+            isLoading={isChatLoading}
+            onSendMessage={sendChatMessage}
+          />
+        )}
 
-          {/* Right Panel - Answer */}
-          <ResizablePanel defaultSize={65} minSize={40}>
-            <div className="h-full glass-panel-solid m-2 ml-0 overflow-hidden">
-              <AnswerPanel
-                answer={answer}
-                isLoading={isGeneratingAnswer}
-                questionText={selectedQuestion?.question_text || null}
-              />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {currentView === 'saved-chats' && (
+          <SavedChats
+            chats={savedChats}
+            onOpenChat={handleOpenSavedChat}
+            onDeleteChat={deleteChat}
+          />
+        )}
       </div>
 
       {/* Footer badge */}
