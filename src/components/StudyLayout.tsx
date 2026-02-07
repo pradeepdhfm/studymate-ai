@@ -8,6 +8,7 @@ import { AppSidebar, type AppView } from './AppSidebar';
 import { Dashboard } from './Dashboard';
 import { QuestionsView } from './QuestionsView';
 import { ChatView } from './ChatView';
+import { SummaryView } from './SummaryView';
 import { SavedChats, type SavedChat } from './SavedChats';
 
 export function StudyLayout() {
@@ -116,6 +117,10 @@ export function StudyLayout() {
             questionsCount={questions.length}
             onNavigate={handleNavigate}
           />
+        )}
+
+        {currentView === 'summarizer' && (
+          <SummaryView documentId={documentId} documentName={documentName} />
         )}
 
         {currentView === 'questions' && (

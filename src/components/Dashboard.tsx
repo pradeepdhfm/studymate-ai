@@ -10,9 +10,9 @@ interface DashboardProps {
 
 const features = [
   {
-    id: 'chat' as AppView,
+    id: 'summarizer' as AppView,
     title: 'Summarizer',
-    description: 'Get concise summaries of any topic from your PDF. Ask for chapter summaries or key concept overviews.',
+    description: 'Get a complete structured summary of your PDF — topics, key concepts, definitions, and exam focus points.',
     icon: FileSearch,
     gradient: 'from-primary/20 to-primary/5',
     borderColor: 'border-primary/20',
