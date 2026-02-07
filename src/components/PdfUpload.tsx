@@ -40,7 +40,7 @@ export function PdfUpload({ onUpload, isUploading, uploadProgress }: PdfUploadPr
       className="flex flex-col items-center justify-center min-h-[60vh] px-6"
     >
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold gradient-text mb-3">StudyRAG</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-3">AI Analyzer</h1>
         <p className="text-muted-foreground text-lg max-w-md">
           Upload your PDF notes or textbook to generate exam-oriented questions and structured answers.
         </p>
